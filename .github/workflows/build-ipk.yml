@@ -16,13 +16,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc wget unzip python3
+          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc wget unzip python3 zstd
 
       - name: Download OpenWrt SDK
         run: |
           wget https://mirrors.aliyun.com/openwrt/releases/24.10.2/targets/x86/64/openwrt-sdk-24.10.2-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
           tar --use-compress-program=unzstd -xf openwrt-sdk-*.tar.zst
-          mv openwrt-sdk-* sdk
+          SDK_DIR=$(find . -maxdepth 1 -type d -name "openwrt-sdk-*" | head -n 1)
+          mv "$SDK_DIR" sdk
 
       - name: Add rkp-ipid package
         run: |
@@ -44,6 +45,3 @@ jobs:
         with:
           name: kmod-rkp-ipid-ipk
           path: sdk/bin/packages/*/base/kmod-rkp-ipid_*.ipk
-
-
-
