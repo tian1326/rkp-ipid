@@ -1,47 +1,45 @@
-name: Build kmod-rkp-ipid for OpenWrt
+name: Build rkp-ipid.ipk
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+    - name: Checkout source
+      uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc wget unzip python3 zstd
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential libncurses5-dev \
+          zlib1g-dev gawk git gettext libssl-dev xsltproc \
+          wget unzip python3
 
-      - name: Download OpenWrt SDK
-        run: |
-          wget https://mirrors.aliyun.com/openwrt/releases/24.10.2/targets/x86/64/openwrt-sdk-24.10.2-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
-          tar --use-compress-program=unzstd -xf openwrt-sdk-*.tar.zst
-          SDK_DIR=$(find . -maxdepth 1 -type d -name "openwrt-sdk-*" | head -n 1)
-          mv "$SDK_DIR" sdk
+    - name: Download OpenWrt SDK
+      run: |
+        wget https://downloads.openwrt.org/releases/22.03.5/targets/x86/64/openwrt-sdk-22.03.5-x86-64_gcc-11.2.0_musl.Linux-x86_64.tar.xz
+        tar -xf openwrt-sdk-*.tar.xz
+        mv openwrt-sdk-*/ sdk/
 
-      - name: Add rkp-ipid package
-        run: |
-          mkdir -p sdk/package/rkp-ipid
-          cp -r src/* sdk/package/rkp-ipid/
-          cp Makefile sdk/package/rkp-ipid/Makefile
+    - name: Prepare package directory
+      run: |
+        mkdir -p sdk/package/rkp-ipid/src
+        cp src/* sdk/package/rkp-ipid/src/
+        cp Makefile sdk/package/rkp-ipid/
 
-      - name: Build package
-        run: |
-          cd sdk
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-          make defconfig
-          echo "CONFIG_PACKAGE_kmod-rkp-ipid=y" >> .config
-          make package/rkp-ipid/compile V=s
+    - name: Build package
+      run: |
+        cd sdk
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        make package/rkp-ipid/compile V=s
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kmod-rkp-ipid-ipk
-          path: sdk/bin/packages/*/base/kmod-rkp-ipid_*.ipk
+    - name: Upload .ipk
+      uses: actions/upload-artifact@v3
+      with:
+        name: rkp-ipid-ipk
+        path: sdk/bin/packages/*/*/rkp-ipid*.ipk
+
