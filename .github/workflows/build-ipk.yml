@@ -36,9 +36,10 @@ jobs:
       run: |
         make package/rkp-ipid/compile V=s
 
-    - name: Upload .ipk artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
       with:
         name: kmod-rkp-ipid-ipk
         path: bin/packages/*/base/kmod-rkp-ipid_*.ipk
+
 
