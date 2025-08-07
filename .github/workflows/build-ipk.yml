@@ -1,0 +1,44 @@
+name: Build kmod-rkp-ipid for OpenWrt
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: openwrtorg/sdk:x86_64-24.10.2
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Prepare SDK environment
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Add rkp-ipid package
+      run: |
+        mkdir -p package/rkp-ipid
+        cp -r src/* package/rkp-ipid/
+        cp Makefile package/rkp-ipid/Makefile
+
+    - name: Configure build
+      run: |
+        make defconfig
+        echo "CONFIG_PACKAGE_kmod-rkp-ipid=y" >> .config
+        make menuconfig
+
+    - name: Build package
+      run: |
+        make package/rkp-ipid/compile V=s
+
+    - name: Upload .ipk artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: kmod-rkp-ipid-ipk
+        path: bin/packages/*/base/kmod-rkp-ipid_*.ipk
+
