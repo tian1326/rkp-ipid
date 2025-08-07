@@ -13,30 +13,37 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Build in container
-        uses: docker://openwrt/sdk:x86-generic
-        with:
-          args: |
-            sh -c "
-              ./scripts/feeds update -a &&
-              ./scripts/feeds install -a &&
-              mkdir -p package/rkp-ipid &&
-              cp -r src/* package/rkp-ipid/ &&
-              cp Makefile package/rkp-ipid/Makefile &&
-              make defconfig &&
-              echo 'CONFIG_PACKAGE_kmod-rkp-ipid=y' >> .config &&
-              make package/rkp-ipid/compile V=s
-            "
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc wget unzip python3
 
+      - name: Download OpenWrt SDK
+        run: |
+          wget https://downloads.openwrt.org/releases/24.10.2/targets/x86/64/openwrt-sdk-24.10.2-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+          tar -xf openwrt-sdk-*.tar.xz
+          mv openwrt-sdk-* sdk
+
+      - name: Add rkp-ipid package
+        run: |
+          mkdir -p sdk/package/rkp-ipid
+          cp -r src/* sdk/package/rkp-ipid/
+          cp Makefile sdk/package/rkp-ipid/Makefile
+
+      - name: Build package
+        run: |
+          cd sdk
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
+          echo "CONFIG_PACKAGE_kmod-rkp-ipid=y" >> .config
+          make package/rkp-ipid/compile V=s
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: kmod-rkp-ipid-ipk
-          path: bin/packages/*/base/kmod-rkp-ipid_*.ipk
+          path: sdk/bin/packages/*/base/kmod-rkp-ipid_*.ipk
 
-env:
-  ACTIONS_RUNNER_DEBUG: false
-  DEBIAN_FRONTEND: noninteractive
 
 
