@@ -8,40 +8,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: openwrt/sdk:x86-generic
-      options: --privileged
 
     steps:
-    - name: Checkout source
-      uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-    - name: Prepare SDK environment
-      run: |
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+      - name: Build in container
+        uses: docker://openwrt/sdk:x86-generic
+        with:
+          args: |
+            sh -c "
+              ./scripts/feeds update -a &&
+              ./scripts/feeds install -a &&
+              mkdir -p package/rkp-ipid &&
+              cp -r src/* package/rkp-ipid/ &&
+              cp Makefile package/rkp-ipid/Makefile &&
+              make defconfig &&
+              echo 'CONFIG_PACKAGE_kmod-rkp-ipid=y' >> .config &&
+              make package/rkp-ipid/compile V=s
+            "
 
-    - name: Add rkp-ipid package
-      run: |
-        mkdir -p package/rkp-ipid
-        cp -r src/* package/rkp-ipid/
-        cp Makefile package/rkp-ipid/Makefile
 
-    - name: Configure build
-      run: |
-        make defconfig
-        echo "CONFIG_PACKAGE_kmod-rkp-ipid=y" >> .config
-        make menuconfig
-
-    - name: Build package
-      run: |
-        make package/rkp-ipid/compile V=s
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: kmod-rkp-ipid-ipk
-        path: bin/packages/*/base/kmod-rkp-ipid_*.ipk
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kmod-rkp-ipid-ipk
+          path: bin/packages/*/base/kmod-rkp-ipid_*.ipk
 
 env:
   ACTIONS_RUNNER_DEBUG: false
