@@ -21,7 +21,7 @@ jobs:
       - name: Download OpenWrt SDK
         run: |
           wget https://mirrors.aliyun.com/openwrt/releases/24.10.2/targets/x86/64/openwrt-sdk-24.10.2-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
-          tar -xf openwrt-sdk-*.tar.xz
+          tar --use-compress-program=unzstd -xf openwrt-sdk-*.tar.zst
           mv openwrt-sdk-* sdk
 
       - name: Add rkp-ipid package
