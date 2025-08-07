@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: openwrt/sdk:x86-generic
+      options: --privileged
 
     steps:
     - name: Checkout source
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Prepare SDK environment
       run: |
@@ -41,5 +42,9 @@ jobs:
       with:
         name: kmod-rkp-ipid-ipk
         path: bin/packages/*/base/kmod-rkp-ipid_*.ipk
+
+env:
+  ACTIONS_RUNNER_DEBUG: false
+  DEBIAN_FRONTEND: noninteractive
 
 
