@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: openwrtorg/sdk:x86_64-24.10.2
+      image: openwrt/sdk:x86-generic
 
     steps:
     - name: Checkout source
